@@ -1,0 +1,23 @@
+name: 'Render_text'
+description: 'Rendering text into slack payload'
+inputs:
+  input-text: 
+    description: 'The text to be rendered to be posted as slack message'
+    required: true
+  start-boundary:
+    description: 'Determine where to start triming input text'
+  end-boundary:
+    description: 'Determine where to end triming input text'
+  email-domain:
+    description: 'Provide it if you want to find correct user to be mentioned in slack'
+  channel-id:
+    description: 'slack channel-id to post message to it'
+    required: true
+
+outputs:
+  time: # id of output
+    description: 'The time message sent to slack'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
