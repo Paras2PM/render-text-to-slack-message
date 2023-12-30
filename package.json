@@ -2,17 +2,30 @@
   "name": "render-text-to-slack-message",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/Paras2PM/render-text-to-slack-message#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Paras2PM/render-text-to-slack-message.git"
+  },
   "exports": {
     ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "package": "ncc build src/index.js --license licenses.txt",
     "test": "jest ./test/**.js"
   },
-  "keywords": [],
+  "keywords": [
+    "Slack",
+    "GitHub",
+    "Actions",
+    "JavaScript"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@actions/github": "^6.0.0",
