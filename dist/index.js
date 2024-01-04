@@ -32477,6 +32477,9 @@ exports.inputTextPostprocess = function (body, imageUrls) {
 
 const { WebClient } = __nccwpck_require__(431);
 const core = __nccwpck_require__(2186);
+const FormData = __nccwpck_require__(4334);
+const fs = __nccwpck_require__(7147);
+const { STATUS_CODES } = __nccwpck_require__(3685);
 
 const slackToken = process.env.SLACK_API_TOKEN || '';
 const client = new WebClient(slackToken);
@@ -32497,11 +32500,27 @@ async function callSlackApi (apiCallPromise, log) {
 }
 
 exports.postFilesUpload = async function (file) {
-  const response = await callSlackApi(
-    client.files.upload({ file }),
-    `Error uploading files to slack ${file}:`
-  );
-  return response.file.url_private;
+  try {
+    const form = new FormData();
+    form.append('file', fs.createReadStream(file));
+    form.append('filetype', 'auto');
+
+    const response = await fetch('https://slack.com/api/files.upload', {
+      body: form,
+      method: 'POST'
+    });
+
+    const body = await response.json();
+
+    if (response.status === STATUS_CODES.ok) {
+      return body.file.url_private;
+    } else {
+      return body.error;
+    }
+  } catch (error) {
+    console.error(`Error uploading files to slack ${file}:`, error.stack);
+    throw error;
+  }
 };
 
 exports.getUserIdByEmail = async function (username) {
