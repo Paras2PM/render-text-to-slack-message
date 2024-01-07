@@ -4,8 +4,11 @@ const FormData = require('form-data');
 const fs = require('fs');
 const { STATUS_CODES } = require('http');
 
-const slackToken = process.env.SLACK_API_TOKEN || '';
-const client = new WebClient(slackToken);
+const slackBotToken = process.env.SLACK_BOT_TOKEN || '';
+const slackUserToken = process.env.SLACK_USER_TOKEN || '';
+
+const botClient = new WebClient(slackBotToken);
+const userClient = new WebClient(slackUserToken);
 const channelId = core.getInput('channel-id');
 const emailDomain = core.getInput('email-domain');
 
@@ -22,9 +25,17 @@ async function callSlackApi (apiCallPromise, log) {
   }
 }
 
+async function filesSharePubliceUrl (fileId) {
+  await callSlackApi(
+    userClient.files.sharedPublicURL({ file: fileId }),
+    'Error uploading file for public/external sharing:'
+  );
+}
+
 exports.postFilesUpload = async function (file) {
   try {
     const form = new FormData();
+    form.append('token', slackUserToken);
     form.append('file', fs.createReadStream(file));
     form.append('filetype', 'auto');
 
@@ -34,9 +45,14 @@ exports.postFilesUpload = async function (file) {
     });
 
     const body = await response.json();
+    console.log(body);
 
     if (response.status === STATUS_CODES.ok) {
-      return body.file.url_private;
+      await filesSharePubliceUrl(body.file.id);
+      const match = body.file.permalink_public.match(/.*-(.*)$/);
+      const pubSecret = match ? match[1] : '';
+      const fileUrl = `${body.file.url_private}?pub_secret=${pubSecret}`;
+      return fileUrl;
     } else {
       return body.error;
     }
@@ -51,7 +67,7 @@ exports.getUserIdByEmail = async function (username) {
     throw new Error('email-domain is not provided.');
   }
   const response = await callSlackApi(
-    client.users.lookupByEmail({ email: `${username}${emailDomain}` }),
+    botClient.users.lookupByEmail({ email: `${username}${emailDomain}` }),
     `Error looking up user ID for ${username}:`
   );
   return response.user.id;
@@ -62,7 +78,7 @@ exports.postChatPostMessage = async function (payload) {
     throw new Error('channel-id is not provided.');
   }
   await callSlackApi(
-    client.chat.postMessage({ channel: channelId, blocks: payload }),
+    botClient.chat.postMessage({ channel: channelId, blocks: payload }),
     'Error posting message to channel:'
   );
 };

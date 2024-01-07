@@ -14,7 +14,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "bundle": "npm run format:write && npm run package",
+    "bundle": "npm run package",
     "package": "ncc build src/index.js --license licenses.txt",
     "test": "jest ./test/**.js"
   },
